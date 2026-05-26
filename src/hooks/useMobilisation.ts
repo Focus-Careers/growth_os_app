@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
+import * as XLSX from 'xlsx'
 import supabase from '../services/supabase'
 import type { User } from '@supabase/supabase-js'
 import type { Message, MobilisationStep, StepOption, CustomerInput } from '../types/index'
@@ -558,63 +559,59 @@ export default function useMobilisation({
     setManualCustomerInput({ organisation_name: '', organisation_website: '' })
   }, [accountId, manualCustomerInput])
 
-  // ── CSV handling ─────────────────────────────────────────────────────
+  // ── CSV / Excel handling ──────────────────────────────────────────────
 
   const handleCsvDrop = useCallback((e: any) => {
     e.preventDefault()
     setCsvDragOver(false)
     const file = e.dataTransfer?.files[0] ?? e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = async (ev: any) => {
-      const text = ev.target.result as string
-      const lines = text.split('\n').filter((l: string) => l.trim())
 
-      // Parse CSV lines respecting quoted fields (handles commas inside quotes)
-      function parseCsvLine(line: string): string[] {
-        const fields: string[] = []
-        let current = ''
-        let inQuotes = false
-        for (let i = 0; i < line.length; i++) {
-          const ch = line[i]
-          if (ch === '"') {
-            inQuotes = !inQuotes
-          } else if (ch === ',' && !inQuotes) {
-            fields.push(current.trim())
-            current = ''
-          } else {
-            current += ch
-          }
-        }
-        fields.push(current.trim())
-        return fields
-      }
+    // Column aliases — case-insensitive, includes underscore variants
+    const NAME_ALIASES = [
+      'name', 'company', 'company name', 'company_name',
+      'business', 'business name', 'business_name',
+      'organisation', 'organisation name', 'organisation_name',
+      'organization', 'organization name', 'organization_name',
+      'client', 'client name', 'client_name',
+      'customer', 'customer name', 'customer_name',
+      'account', 'account name', 'account_name',
+    ]
+    const WEBSITE_ALIASES = [
+      'website', 'url', 'domain', 'web', 'site', 'link',
+      'company website', 'company_website', 'website url', 'website_url',
+      'company url', 'company_url',
+    ]
 
-      // Detect columns from header row
-      const NAME_ALIASES = ['name', 'company', 'company name', 'business', 'business name', 'organisation', 'organization', 'client', 'customer', 'account', 'customer name', 'client name']
-      const WEBSITE_ALIASES = ['website', 'url', 'domain', 'web', 'site', 'link', 'company website', 'website url']
+    // Normalise a raw header string: strip BOM, quotes, \r, collapse spaces
+    function normaliseHeader(h: string): string {
+      return h
+        .replace(/^﻿/, '')   // strip UTF-8 BOM on first field
+        .replace(/^"|"$/g, '')    // strip surrounding quotes
+        .replace(/\r/g, '')       // strip Windows \r
+        .toLowerCase()
+        .trim()
+    }
 
-      const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().trim())
+    async function processRows(rawRows: string[][]) {
+      if (!rawRows.length) return
+      const headers = rawRows[0].map(normaliseHeader)
       const nameCol = headers.findIndex(h => NAME_ALIASES.includes(h))
       const websiteCol = headers.findIndex(h => WEBSITE_ALIASES.includes(h))
 
       if (nameCol === -1) {
-        setCsvError('Could not find a company name column. Please ensure your CSV has a column named "name", "company", "business", or similar.')
+        setCsvError('Could not find a company name column. Please ensure your file has a column named "Company Name", "Business", "Organisation", or similar.')
         return
       }
 
       setCsvError(null)
 
-      const rows = lines.slice(1).map(line => {
-        const fields = parseCsvLine(line)
-        return {
-          organisation_name: fields[nameCol]?.trim() ?? '',
-          organisation_website: websiteCol !== -1 ? (fields[websiteCol]?.trim() ?? '') : '',
-        }
-      }).filter(r => r.organisation_name)
+      const rows = rawRows.slice(1).map(fields => ({
+        organisation_name: String(fields[nameCol] ?? '').trim(),
+        organisation_website: websiteCol !== -1 ? String(fields[websiteCol] ?? '').trim() : '',
+      })).filter(r => r.organisation_name)
 
       if (accountId && rows.length) {
-        // Insert in batches of 500 to handle large CSVs
         const BATCH_SIZE = 500
         for (let i = 0; i < rows.length; i += BATCH_SIZE) {
           const batch = rows.slice(i, i + BATCH_SIZE)
@@ -627,7 +624,44 @@ export default function useMobilisation({
       }
       setCsvRows(rows)
     }
-    reader.readAsText(file)
+
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+
+    if (isExcel) {
+      const reader = new FileReader()
+      reader.onload = async (ev: any) => {
+        const data = new Uint8Array(ev.target.result)
+        const workbook = XLSX.read(data, { type: 'array' })
+        const sheet = workbook.Sheets[workbook.SheetNames[0]]
+        const rawRows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '' })
+        await processRows(rawRows)
+      }
+      reader.readAsArrayBuffer(file)
+    } else {
+      // CSV path — parse respecting quoted fields
+      function parseCsvLine(line: string): string[] {
+        const fields: string[] = []
+        let current = ''
+        let inQuotes = false
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i]
+          if (ch === '"') { inQuotes = !inQuotes }
+          else if (ch === ',' && !inQuotes) { fields.push(current); current = '' }
+          else { current += ch }
+        }
+        fields.push(current)
+        return fields
+      }
+
+      const reader = new FileReader()
+      reader.onload = async (ev: any) => {
+        const text = ev.target.result as string
+        const lines = text.split('\n').filter((l: string) => l.trim())
+        const rawRows = lines.map(parseCsvLine)
+        await processRows(rawRows)
+      }
+      reader.readAsText(file)
+    }
   }, [accountId])
 
   const downloadCsvTemplate = useCallback(() => {

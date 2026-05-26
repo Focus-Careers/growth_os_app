@@ -137,7 +137,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               </button>
             </div>
             <div className="sidebar-field">
-              <label className="sidebar-field-label">Upload CSV</label>
+              <label className="sidebar-field-label">Upload Customer List</label>
               <div
                 className={`csv-drop-zone${csvDragOver ? ' drag-over' : ''}`}
                 onDragOver={e => { e.preventDefault(); setCsvDragOver(true) }}
@@ -147,10 +147,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               >
                 {csvRows.length > 0
                   ? <span>{csvRows.length} customer{csvRows.length !== 1 ? 's' : ''} uploaded</span>
-                  : <span>Drag a CSV here, or click to browse</span>
+                  : <span>Drag a CSV or Excel file here, or click to browse</span>
                 }
               </div>
-              <input id="csv-file-input" type="file" accept=".csv" style={{ display: 'none' }} onChange={onCsvDrop} />
+              <input id="csv-file-input" type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }} onChange={onCsvDrop} />
               {csvError && <p className="csv-error">{csvError}</p>}
             </div>
             {csvRows.length > 0 && (
@@ -324,7 +324,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               </button>
             </div>
             <div className="sidebar-field">
-              <label className="sidebar-field-label">Upload CSV</label>
+              <label className="sidebar-field-label">Upload Customer List</label>
               <div
                 className={`csv-drop-zone${csvDragOver ? ' drag-over' : ''}`}
                 onDragOver={e => { e.preventDefault(); setCsvDragOver(true) }}
@@ -334,10 +334,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               >
                 {csvRows.length > 0
                   ? <span>{csvRows.length} customer{csvRows.length !== 1 ? 's' : ''} uploaded</span>
-                  : <span>Drag a CSV here, or click to browse</span>
+                  : <span>Drag a CSV or Excel file here, or click to browse</span>
                 }
               </div>
-              <input id="csv-file-input-tf" type="file" accept=".csv" style={{ display: 'none' }} onChange={onCsvDrop} />
+              <input id="csv-file-input-tf" type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }} onChange={onCsvDrop} />
             </div>
             {csvRows.length > 0 && (
               <div className="sidebar-field">

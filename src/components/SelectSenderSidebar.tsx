@@ -18,11 +18,12 @@ import gmailLogo from '../assets/gmail.png'
 import outlookLogo from '../assets/outlook.png'
 import yahooLogo from '../assets/yahoo.png'
 
-type Provider = 'gmail' | 'outlook' | 'yahoo' | 'custom'
+type Provider = 'gmail' | 'outlook' | 'microsoft365' | 'yahoo' | 'custom'
 
 const PROVIDER_ICONS: Record<Provider, React.ReactNode> = {
   gmail: <img src={gmailLogo} alt="Gmail" className="sender-provider-logo" />,
   outlook: <img src={outlookLogo} alt="Outlook" className="sender-provider-logo" />,
+  microsoft365: <img src={outlookLogo} alt="Microsoft 365" className="sender-provider-logo" />,
   yahoo: <img src={yahooLogo} alt="Yahoo" className="sender-provider-logo" />,
   custom: (
     <svg className="sender-provider-logo" width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -51,7 +52,7 @@ const PROVIDERS: { id: Provider; name: string; domains: string[]; smtp_host: str
   },
   {
     id: 'outlook',
-    name: 'Outlook',
+    name: 'Outlook (Personal)',
     domains: ['outlook.com', 'hotmail.com', 'live.com'],
     smtp_host: 'smtp.office365.com',
     smtp_port: 587,
@@ -62,6 +63,20 @@ const PROVIDERS: { id: Provider; name: string; domains: string[]; smtp_host: str
       'Enable two-step verification',
       'Under "App passwords", create a new one',
       'Copy the generated password and paste it below',
+    ],
+  },
+  {
+    id: 'microsoft365',
+    name: 'Microsoft 365 (Work)',
+    domains: [],
+    smtp_host: 'smtp.office365.com',
+    smtp_port: 587,
+    imap_host: 'outlook.office365.com',
+    imap_port: 993,
+    instructions: [
+      'Ask your Microsoft 365 admin to enable SMTP AUTH for your mailbox: M365 Admin Center → Users → Active users → [your email] → Mail → Manage email apps → enable "Authenticated SMTP"',
+      'If your account has MFA enabled, go to mysignins.microsoft.com → Security info → Add method → App password, and use the generated password below',
+      'If no MFA, use your regular Microsoft 365 password below',
     ],
   },
   {
@@ -197,7 +212,7 @@ const SelectSenderSidebar: React.FC<SelectSenderSidebarProps> = ({
             >
               {PROVIDER_ICONS[p.id]}
               <span className="sender-provider-name">{p.name}</span>
-              <span className="sender-provider-domains">{p.domains.join(', ')}</span>
+              <span className="sender-provider-domains">{p.id === 'microsoft365' ? 'Work / custom domain' : p.domains.join(', ')}</span>
             </button>
           ))}
           <button
@@ -221,7 +236,9 @@ const SelectSenderSidebar: React.FC<SelectSenderSidebarProps> = ({
 
           {activePreset && (
             <div className="sender-instructions">
-              <div className="sender-instructions-heading">How to get your app password</div>
+              <div className="sender-instructions-heading">
+                {selectedProvider === 'microsoft365' ? 'Setup instructions' : 'How to get your app password'}
+              </div>
               <ol className="sender-instructions-list">
                 {activePreset.instructions.map((step, i) => (
                   <li key={i}>{step}</li>
@@ -249,11 +266,13 @@ const SelectSenderSidebar: React.FC<SelectSenderSidebarProps> = ({
               onChange={e => setNewDisplayName(e.target.value)}
             />
 
-            <label className="sender-field-label">App Password</label>
+            <label className="sender-field-label">
+              {selectedProvider === 'microsoft365' ? 'Password' : 'App Password'}
+            </label>
             <input
               className="sender-create-input"
               type="password"
-              placeholder={activePreset ? 'Paste your app password here' : 'SMTP password'}
+              placeholder={selectedProvider === 'microsoft365' ? 'Your Microsoft 365 password or app password' : activePreset ? 'Paste your app password here' : 'SMTP password'}
               value={smtpPassword}
               onChange={e => setSmtpPassword(e.target.value)}
             />
