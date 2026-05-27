@@ -51,6 +51,9 @@ const BASE_EMPLOYEES: Employee[] = [
 export default function App() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee>(BASE_EMPLOYEES[0])
   const [selectedCampaignContact, setSelectedCampaignContact] = useState<CampaignContact | null>(null)
+  // When on an agent tab, lets the user minimise the Watson chat so the agent
+  // panel goes full width. Reuses the existing animated `watson-hidden` state.
+  const [watsonCollapsed, setWatsonCollapsed] = useState(false)
   const [inviteLanding, setInviteLanding] = useState<{ companyName: string | null; inviterName: string | null } | null>(null)
   // True if we landed with a pending invite token — holds the render until processing completes
   const [inviteProcessing, setInviteProcessing] = useState(() => !!localStorage.getItem('pending_invite_token'))
@@ -553,6 +556,11 @@ export default function App() {
               <span className="topbar-agent-name">{selectedEmployee.name}</span>
               <span className="topbar-active-dot">● Active</span>
             </div>
+            {watsonCollapsed && (
+              <button className="watson-reopen-btn" onClick={() => setWatsonCollapsed(false)}>
+                ‹ Show Watson
+              </button>
+            )}
           </div>
           {selectedEmployee.name === 'Belfort' && (
             <BelfortTargets
@@ -640,7 +648,7 @@ export default function App() {
         </div>
 
         {/* Watson chat — always rendered, transitions between full and sidebar */}
-        <div id="watson-panel" className={`${selectedEmployee.name === 'Watson' ? 'watson-full' : (selectedEmployee.name === 'Admin' || mob.activeSidebar || bel.selectedLead || selectedCampaignContact) ? 'watson-hidden' : 'watson-sidebar'}${fromClient ? ' from-client' : ''}${camp.selectedCampaign ? ' watson-narrow' : ''}`}>
+        <div id="watson-panel" className={`${selectedEmployee.name === 'Watson' ? 'watson-full' : (selectedEmployee.name === 'Admin' || mob.activeSidebar || bel.selectedLead || selectedCampaignContact || watsonCollapsed) ? 'watson-hidden' : 'watson-sidebar'}${fromClient ? ' from-client' : ''}${camp.selectedCampaign ? ' watson-narrow' : ''}`}>
           {selectedEmployee.name !== 'Watson' && (
             <div className="watson-sidebar-header">
               <div className="topbar-agent-status">
@@ -648,6 +656,13 @@ export default function App() {
                 <span className="topbar-agent-name">Watson</span>
                 <span className="topbar-active-dot">● Active</span>
               </div>
+              <button
+                className="watson-collapse-btn"
+                onClick={() => setWatsonCollapsed(true)}
+                title="Hide Watson"
+              >
+                Hide ›
+              </button>
             </div>
           )}
           {selectedEmployee.name === 'Watson' && (
