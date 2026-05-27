@@ -74,7 +74,7 @@ const PROVIDERS: { id: Provider; name: string; domains: string[]; smtp_host: str
     imap_host: 'outlook.office365.com',
     imap_port: 993,
     instructions: [
-      'Ask your Microsoft 365 admin to enable SMTP AUTH for your mailbox: M365 Admin Center → Users → Active users → [your email] → Mail → Manage email apps → enable "Authenticated SMTP"',
+      'Ask your Microsoft 365 admin to enable SMTP AUTH and IMAP for your mailbox: M365 Admin Center → Users → Active users → [your email] → Mail → Manage email apps → enable both "Authenticated SMTP" and "IMAP"',
       'If your account has MFA enabled, go to mysignins.microsoft.com → Security info → Add method → App password, and use the generated password below',
       'If no MFA, use your regular Microsoft 365 password below',
     ],
