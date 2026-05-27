@@ -17,6 +17,8 @@ interface WatsonChatProps {
   onKeyDown: (e: React.KeyboardEvent) => void
   formatTime: (date: string | Date) => string
   compact?: boolean
+  canStop: boolean
+  onStop: () => void
 }
 
 const SCROLL_THRESHOLD = 150
@@ -35,6 +37,8 @@ const WatsonChat: React.FC<WatsonChatProps> = ({
   onKeyDown,
   formatTime,
   compact,
+  canStop,
+  onStop,
 }) => {
   const chatRef = useRef<HTMLDivElement>(null)
   const [userScrolledUp, setUserScrolledUp] = useState(false)
@@ -167,6 +171,15 @@ const WatsonChat: React.FC<WatsonChatProps> = ({
             className="chat-input"
             onKeyDown={onKeyDown}
           />
+          {canStop && (
+            <button
+              className="chat-stop-btn"
+              onClick={onStop}
+              title="Stop the current task and return to chat"
+            >
+              Stop
+            </button>
+          )}
           <button
             className="chat-send-btn"
             disabled={!input_bar_enabled || !!activeSidebar}

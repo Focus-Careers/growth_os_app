@@ -731,6 +731,23 @@ body {
   cursor: not-allowed;
 }
 
+.chat-stop-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  padding: 4px 10px;
+}
+
+.chat-stop-btn:hover {
+  color: var(--fg);
+  border-color: var(--muted);
+}
+
 /* ============================================================
    TYPING INDICATOR
    ============================================================ */

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import supabase from '../services/supabase'
 
 export interface SkillStatus {
@@ -20,6 +20,10 @@ interface UseSkillStatusParams {
  */
 export default function useSkillStatus({ userDetailsId }: UseSkillStatusParams) {
   const [activeSkills, setActiveSkills] = useState<SkillStatus[]>([])
+
+  // Clear all running-skill indicators immediately (used on user-initiated stop,
+  // where the cancelled run won't emit a matching 'complete' event).
+  const clearActiveSkills = useCallback(() => setActiveSkills([]), [])
 
   useEffect(() => {
     if (!userDetailsId) return
@@ -49,5 +53,5 @@ export default function useSkillStatus({ userDetailsId }: UseSkillStatusParams) 
     return () => { supabase.removeChannel(channel) }
   }, [userDetailsId])
 
-  return { activeSkills }
+  return { activeSkills, clearActiveSkills }
 }

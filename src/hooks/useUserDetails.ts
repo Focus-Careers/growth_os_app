@@ -209,6 +209,7 @@ export default function useUserDetails({ user }: UseUserDetailsParams) {
       setIsTyping: (v: boolean) => void
       setMessages: React.Dispatch<React.SetStateAction<Message[]>>
       startMobilisation: (name: string) => Promise<void>
+      onCancelled: () => void
     },
   ) => {
     let typingTimeout: ReturnType<typeof setTimeout> | null = null
@@ -225,6 +226,9 @@ export default function useUserDetails({ user }: UseUserDetailsParams) {
       })
       .on('broadcast', { event: 'start_mobilisation' }, ({ payload }) => {
         callbacks.startMobilisation(payload.mobilisation)
+      })
+      .on('broadcast', { event: 'cancelled' }, () => {
+        callbacks.onCancelled()
       })
       .on('postgres_changes', {
         event: 'INSERT',

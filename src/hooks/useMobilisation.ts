@@ -115,6 +115,34 @@ export default function useMobilisation({
       .eq('id', userDetailsId)
   }, [userDetailsId])
 
+  // ── Cancel / stop ────────────────────────────────────────────────────
+
+  // Full stop. Clears local UI immediately, then tells the backend to abort any
+  // in-flight skill run and clear all server-side state (active_mobilisation,
+  // queued_mobilisations, active_skill). Used by the Stop button and typed "stop".
+  const cancelAll = useCallback(async () => {
+    resetLocalMobilisationState()
+    setInputBarEnabled(true)
+    const id = userDetailsIdRef.current
+    if (!id) return
+    try {
+      await fetch(`${API_URL}/api/mobilisation/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_details_id: id }),
+      })
+    } catch (err) {
+      console.error('cancel error:', err)
+    }
+  }, [resetLocalMobilisationState, userDetailsIdRef])
+
+  // Local-only reset in response to a server `cancelled` broadcast — the backend
+  // has already aborted/cleared state (e.g. a typed "stop" reached the processor).
+  const handleCancelledBroadcast = useCallback(() => {
+    resetLocalMobilisationState()
+    setInputBarEnabled(true)
+  }, [resetLocalMobilisationState])
+
   // ── Mobilisation completion ──────────────────────────────────────────
 
   const completeMobilisation = useCallback(async (
@@ -271,13 +299,12 @@ export default function useMobilisation({
       setMessages(prev => [...prev, { tempId, message_body: text, is_agent: false, timestamp: new Date() }])
       setInputValue('')
       saveMessage(text, false, false)
-      await clearMobilisationState()
+      await cancelAll()
       setMessages(prev => [...prev, {
         message_body: "No problem — I've cancelled that. What would you like to do instead?",
         is_agent: true,
         timestamp: new Date(),
       }])
-      setInputBarEnabled(true)
       return
     }
 
@@ -347,7 +374,7 @@ export default function useMobilisation({
     input_bar_enabled, activeSidebar, mobilisation_active, current_step,
     current_mobilisation, mobilisation_responses, userDetailsId,
     setMessages, saveMessage, showStepMessages, saveMobilisationState,
-    clearMobilisationState, completeMobilisation,
+    clearMobilisationState, completeMobilisation, cancelAll,
   ])
 
   // ── Handle option select ─────────────────────────────────────────────
@@ -743,6 +770,8 @@ export default function useMobilisation({
     resumeMobilisation,
     resetLocalMobilisationState,
     clearMobilisationState,
+    cancelAll,
+    handleCancelledBroadcast,
     checkQueuedMobilisations,
     handleSend,
     handleOptionSelect,

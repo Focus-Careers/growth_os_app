@@ -102,7 +102,7 @@ export default function App() {
     selectedEmployee,
     firstname: ud.userFirstNameRef?.current,
   })
-  const { activeSkills } = useSkillStatus({ userDetailsId: ud.userDetailsId })
+  const { activeSkills, clearActiveSkills } = useSkillStatus({ userDetailsId: ud.userDetailsId })
   const war = useWarren({ accountId: ud.accountId, userDetailsId: ud.userDetailsId, selectedEmployee, firstname: ud.userFirstNameRef?.current })
   const pep = usePepper({ accountId: ud.accountId, userDetailsId: ud.userDetailsId, selectedEmployee, firstname: ud.userFirstNameRef?.current })
 
@@ -164,6 +164,7 @@ export default function App() {
               setIsTyping: msg.setIsTyping,
               setMessages: msg.setMessages,
               startMobilisation: mob.startMobilisation,
+              onCancelled: () => { mob.handleCancelledBroadcast(); clearActiveSkills() },
             })
             cleanupRef.current = invCleanup
 
@@ -195,6 +196,7 @@ export default function App() {
         setIsTyping: msg.setIsTyping,
         setMessages: msg.setMessages,
         startMobilisation: mob.startMobilisation,
+        onCancelled: () => { mob.handleCancelledBroadcast(); clearActiveSkills() },
       })
       cleanupRef.current = cleanup
 
@@ -387,6 +389,7 @@ export default function App() {
       setIsTyping: msg.setIsTyping,
       setMessages: msg.setMessages,
       startMobilisation: mob.startMobilisation,
+      onCancelled: () => { mob.handleCancelledBroadcast(); clearActiveSkills() },
     })
     cleanupRef.current = cleanup
 
@@ -471,6 +474,7 @@ export default function App() {
       setIsTyping: msg.setIsTyping,
       setMessages: msg.setMessages,
       startMobilisation: mob.startMobilisation,
+      onCancelled: () => { mob.handleCancelledBroadcast(); clearActiveSkills() },
     })
     cleanupRef.current = cleanup
 
@@ -669,6 +673,8 @@ export default function App() {
             onKeyDown={mob.handleKeyDown}
             formatTime={msg.formatTime}
             compact={selectedEmployee.name !== 'Watson'}
+            canStop={mob.mobilisation_active || activeSkills.length > 0}
+            onStop={() => { clearActiveSkills(); mob.cancelAll() }}
           />
         </div>
       </>)}
