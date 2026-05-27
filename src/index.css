@@ -844,16 +844,19 @@ body {
 .watson-collapse-btn {
   margin-left: auto;
   background: none;
-  border: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 400;
   cursor: pointer;
   font-family: 'DM Mono', monospace;
+  padding: 4px 12px;
 }
 
 .watson-collapse-btn:hover {
   color: var(--fg);
+  border-color: var(--muted);
 }
 
 .watson-reopen-btn {
