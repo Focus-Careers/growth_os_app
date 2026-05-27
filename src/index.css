@@ -847,7 +847,7 @@ body {
   border: none;
   color: var(--muted);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   font-family: 'DM Mono', monospace;
 }
@@ -862,7 +862,7 @@ body {
   border-radius: 6px;
   color: var(--muted);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   font-family: 'DM Mono', monospace;
   padding: 4px 12px;
