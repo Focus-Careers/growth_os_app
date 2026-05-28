@@ -81,6 +81,14 @@ export default function App() {
 
   const { user } = useAuth()
   const ud = useUserDetails({ user })
+
+  // Update browser tab title to reflect the active organisation
+  useEffect(() => {
+    const activeCompany = ud.companies.find(c => c.id === ud.userDetailsId)
+    const orgName = activeCompany?.account_name
+    document.title = orgName ? `GrowthOS - ${orgName}` : 'GrowthOS'
+  }, [ud.userDetailsId, ud.companies])
+
   const msg = useMessages({ userFirstNameRef: ud.userFirstNameRef, saveMessage: ud.saveMessage })
   const mob = useMobilisation({
     userDetailsId: ud.userDetailsId,
