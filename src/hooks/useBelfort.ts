@@ -280,7 +280,10 @@ export default function useBelfort({ accountId, userDetailsId, selectedEmployee,
   }, [])
 
   const approveLead = useCallback(async (lead: Lead) => {
-    await supabase.from('leads').update({ approved: true }).eq('id', lead.id)
+    // Approval goes through the backend so the lead's contacts get pushed to
+    // the active campaign for its ITP (campaign_contacts insert + Smartlead
+    // sync). Backend logs any push errors; the approval itself always sticks.
+    await fetch(`${API_URL}/api/leads/${lead.id}/approve`, { method: 'POST' })
     naBufferIds.current.delete(lead.id)
     setNeedsApprovalBuffer(prev => prev.filter(l => l.id !== lead.id))
     setNeedsApprovalTotal(prev => Math.max(0, prev - 1))
