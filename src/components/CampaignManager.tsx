@@ -228,6 +228,9 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
           <span className={`campaign-status ${selectedCampaign.status}`}>{selectedCampaign.status}</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          {!editing && onRefresh && (
+            <button className="campaign-edit-btn" onClick={onRefresh} title="Refresh contacts">↻ Refresh</button>
+          )}
           {!editing && (
             <button className="campaign-edit-btn" onClick={() => {
               setEditName(selectedCampaign.name)

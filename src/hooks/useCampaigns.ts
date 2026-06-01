@@ -278,6 +278,21 @@ export default function useCampaigns({ accountId, userDetailsId, selectedEmploye
     }
   }, [selectedCampaign, fetchCampaigns])
 
+  const refreshContacts = useCallback(async () => {
+    if (!selectedCampaign) return
+    setContactsLoading(true)
+    const { data } = await supabase
+      .from('campaign_contacts')
+      .select('*, contacts(first_name, last_name, email, role, target_id, targets(title, domain))')
+      .eq('campaign_id', selectedCampaign.id)
+    const contacts = (data ?? []).map((row: any) => ({
+      ...row,
+      contact: row.contacts ? { ...row.contacts, targets: row.contacts.targets ?? undefined } : undefined,
+    })) as CampaignContact[]
+    setCampaignContacts(contacts)
+    setContactsLoading(false)
+  }, [selectedCampaign])
+
   const updateCampaign = useCallback(async (campaignId: string, updates: { name?: string; tone?: string; email_sequence?: any[] }) => {
     const res = await fetch(`${API_URL}/api/campaigns/update`, {
       method: 'POST',
@@ -310,5 +325,6 @@ export default function useCampaigns({ accountId, userDetailsId, selectedEmploye
     toggleCampaignStatus,
     updateCampaign,
     refreshCampaigns: fetchCampaigns,
+    refreshContacts,
   }
 }

@@ -620,7 +620,7 @@ export default function App() {
               onUpdateCampaign={camp.updateCampaign}
               hasMoreContacts={camp.hasMoreContacts}
               onLoadMoreContacts={camp.loadMoreContacts}
-              onRefresh={camp.refreshCampaigns}
+              onRefresh={camp.refreshContacts}
             />
           )}
           {selectedEmployee.name === 'Warren' && (
