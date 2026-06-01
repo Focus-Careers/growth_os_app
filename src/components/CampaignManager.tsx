@@ -506,6 +506,20 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
                     {cc.sent_at && col.key !== 'pending' && !cc.reply_body && (
                       <div className="kanban-card-time">{formatTimestamp(col.key === 'replied' && cc.replied_at ? cc.replied_at : col.key === 'opened' && cc.opened_at ? cc.opened_at : cc.sent_at)}</div>
                     )}
+                    {cc.current_sequence != null && parsedSequence.length > 0 && (
+                      <div className="kanban-card-sequence">
+                        {parsedSequence.map((_, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              width: 6, height: 6, borderRadius: '50%', display: 'inline-block',
+                              background: i < cc.current_sequence! ? col.colour : 'var(--border)',
+                              marginRight: 3,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
                 {(grouped[col.key] ?? []).length === 0 && (

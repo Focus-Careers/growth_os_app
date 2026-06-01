@@ -35,6 +35,7 @@ export interface CampaignContact {
   replied_at: string | null
   email_body: string | null
   reply_body: string | null
+  current_sequence: number | null
   classification: 'positive' | 'negative' | 'neutral' | 'out_of_office' | null
   contact?: {
     first_name: string
@@ -214,6 +215,7 @@ export default function useCampaigns({ accountId, userDetailsId, selectedEmploye
               sent_at: payload.status === 'sent' ? new Date().toISOString() : cc.sent_at,
               opened_at: payload.status === 'opened' ? new Date().toISOString() : cc.opened_at,
               replied_at: payload.status === 'replied' ? new Date().toISOString() : cc.replied_at,
+              current_sequence: payload.current_sequence ?? cc.current_sequence,
             }
           }
           return cc
