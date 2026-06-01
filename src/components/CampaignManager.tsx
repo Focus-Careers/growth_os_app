@@ -117,10 +117,12 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
     for (const cc of campaignContacts) {
       counts[cc.status] = (counts[cc.status] ?? 0) + 1
     }
+    const pending = counts['pending'] ?? 0
     return {
       total: campaignContacts.length,
-      pending: counts['pending'] ?? 0,
-      sent: counts['sent'] ?? 0,
+      pending,
+      // Sent = everyone who has been contacted (total minus still queued)
+      sent: campaignContacts.length - pending,
       opened: counts['opened'] ?? 0,
       replied: counts['replied'] ?? 0,
       bounced: (counts['bounced'] ?? 0) + (counts['failed'] ?? 0) + (counts['unsubscribed'] ?? 0),
