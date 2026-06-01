@@ -165,14 +165,13 @@ export default function useCampaigns({ accountId, userDetailsId, selectedEmploye
       return
     }
 
-    // Fetch contacts with target info (paginated)
+    // Fetch all contacts for this campaign (no limit — pipeline needs all statuses)
     setContactsLoading(true)
     setHasMoreContacts(false)
     supabase
       .from('campaign_contacts')
       .select('*, contacts(first_name, last_name, email, role, target_id, targets(title, domain))')
       .eq('campaign_id', selectedCampaign.id)
-      .limit(CONTACTS_PAGE_SIZE)
       .then(({ data }) => {
         const contacts = (data ?? []).map((row: any) => ({
           ...row,
@@ -182,7 +181,6 @@ export default function useCampaigns({ accountId, userDetailsId, selectedEmploye
           } : undefined,
         })) as CampaignContact[]
         setCampaignContacts(contacts)
-        setHasMoreContacts(contacts.length === CONTACTS_PAGE_SIZE)
         setContactsLoading(false)
       })
 
