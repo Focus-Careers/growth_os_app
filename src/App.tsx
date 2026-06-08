@@ -621,6 +621,7 @@ export default function App() {
               hasMoreContacts={camp.hasMoreContacts}
               onLoadMoreContacts={camp.loadMoreContacts}
               onRefresh={camp.refreshContacts}
+              accountId={ud.accountId}
             />
           )}
           {selectedEmployee.name === 'Warren' && (

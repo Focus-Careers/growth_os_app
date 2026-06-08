@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import type { Campaign, CampaignContact, CampaignItp, CampaignSender } from '../hooks/useCampaigns'
+import CampaignSenderPills from './CampaignSenderPills'
 
 const API_URL = import.meta.env.VITE_API_URL
 const PRESET_SMTP_HOSTS = new Set(['smtp.gmail.com', 'smtp.office365.com', 'smtp.mail.yahoo.com'])
@@ -40,6 +41,7 @@ interface CampaignManagerProps {
   hasMoreContacts?: boolean
   onLoadMoreContacts?: () => void
   onRefresh?: () => void
+  accountId?: string | null
 }
 
 function formatDate(dateStr: string) {
@@ -77,6 +79,7 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
   hasMoreContacts,
   onLoadMoreContacts,
   onRefresh,
+  accountId,
 }) => {
   const [activeEmailTab, setActiveEmailTab] = useState(0)
   const [editing, setEditing] = useState(false)
@@ -422,6 +425,14 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
               </div>
             )
           })()}
+        </div>
+        <div className="campaign-meta-item" style={{ gridColumn: '1 / -1' }}>
+          <span className="campaign-meta-label">Senders &amp; capacity</span>
+          <CampaignSenderPills
+            campaignId={selectedCampaign.id}
+            accountId={accountId ?? null}
+            onChange={onRefresh}
+          />
         </div>
       </div>
 
