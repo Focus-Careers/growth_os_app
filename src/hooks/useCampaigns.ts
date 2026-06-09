@@ -14,6 +14,8 @@ export interface Campaign {
   sender_id: string | null
   created_at: string
   contact_count?: number
+  // sent = total individual email sends (counts sequence 2, 3, etc separately)
+  // opened/replied/bounced = unique contacts in that state
   stats?: { sent: number; opened: number; replied: number; bounced: number }
 }
 
@@ -90,10 +92,18 @@ export default function useCampaigns({ accountId, userDetailsId, selectedEmploye
     // Fetch contact counts and status stats for each campaign
     const ids = campaignList.map(c => c.id)
     if (ids.length > 0) {
-      const { data: ccData } = await supabase
-        .from('campaign_contacts')
-        .select('campaign_id, status')
-        .in('campaign_id', ids)
+      const [{ data: ccData }, { data: eventsData }] = await Promise.all([
+        supabase
+          .from('campaign_contacts')
+          .select('campaign_id, status')
+          .in('campaign_id', ids),
+        // Total individual email sends per campaign (counts seq2, seq3 etc. separately)
+        supabase
+          .from('campaign_contact_events')
+          .select('campaign_id')
+          .in('campaign_id', ids)
+          .eq('event_type', 'sent'),
+      ])
 
       const counts: Record<string, number> = {}
       const statsBycamp: Record<string, { sent: number; opened: number; replied: number; bounced: number }> = {}
@@ -101,15 +111,23 @@ export default function useCampaigns({ accountId, userDetailsId, selectedEmploye
       for (const row of (ccData ?? []) as { campaign_id: string; status: string }[]) {
         counts[row.campaign_id] = (counts[row.campaign_id] ?? 0) + 1
         if (!statsBycamp[row.campaign_id]) statsBycamp[row.campaign_id] = { sent: 0, opened: 0, replied: 0, bounced: 0 }
-        if (row.status === 'sent') statsBycamp[row.campaign_id].sent++
-        else if (row.status === 'opened') statsBycamp[row.campaign_id].opened++
+        if (row.status === 'opened') statsBycamp[row.campaign_id].opened++
         else if (row.status === 'replied') statsBycamp[row.campaign_id].replied++
         else if (row.status === 'bounced' || row.status === 'failed') statsBycamp[row.campaign_id].bounced++
       }
 
+      // sent = total email send events (not unique contacts), so seq2 sends count separately
+      const emailSentCounts: Record<string, number> = {}
+      for (const row of (eventsData ?? []) as { campaign_id: string }[]) {
+        emailSentCounts[row.campaign_id] = (emailSentCounts[row.campaign_id] ?? 0) + 1
+      }
+
       for (const c of campaignList) {
         c.contact_count = counts[c.id] ?? 0
-        c.stats = statsBycamp[c.id] ?? { sent: 0, opened: 0, replied: 0, bounced: 0 }
+        c.stats = {
+          ...(statsBycamp[c.id] ?? { opened: 0, replied: 0, bounced: 0 }),
+          sent: emailSentCounts[c.id] ?? 0,
+        }
       }
     }
 

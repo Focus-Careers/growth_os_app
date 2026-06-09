@@ -167,7 +167,7 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
           campaigns.map(campaign => {
             const s = campaign.stats ?? { sent: 0, opened: 0, replied: 0, bounced: 0 }
             const total = campaign.contact_count ?? 0
-            const totalSent = s.sent + s.opened + s.replied
+            const totalSent = s.sent  // total email sends across all sequences
             return (
               <div key={campaign.id} className="campaign-card" onClick={() => onSelectCampaign(campaign)}>
                 <div className="campaign-card-top">
