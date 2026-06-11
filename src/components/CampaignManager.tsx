@@ -231,7 +231,7 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {!editing && onRefresh && (
-            <button className="campaign-edit-btn" onClick={onRefresh} title="Refresh contacts">↻ Refresh</button>
+            <button className="campaign-edit-btn" onClick={onRefresh} title="Refresh — pulls latest sends from Smartlead">↻ Refresh</button>
           )}
           {!editing && (
             <button className="campaign-edit-btn" onClick={() => {

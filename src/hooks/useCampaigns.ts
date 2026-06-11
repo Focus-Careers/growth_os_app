@@ -301,6 +301,14 @@ export default function useCampaigns({ accountId, userDetailsId, selectedEmploye
   const refreshContacts = useCallback(async () => {
     if (!selectedCampaign) return
     setContactsLoading(true)
+    // Pull the latest sends from Smartlead first (follow-up sends are never webhooked),
+    // so the refresh reflects current sequence progress and send timestamps.
+    await fetch(`${API_URL}/api/campaigns/reconcile-sends`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaign_id: selectedCampaign.id }),
+    }).catch(err => console.error('[refreshContacts] reconcile error:', err))
+
     const { data } = await supabase
       .from('campaign_contacts')
       .select('*, contacts(first_name, last_name, email, role, target_id, targets(title, domain))')
