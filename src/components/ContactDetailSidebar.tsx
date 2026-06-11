@@ -1,5 +1,6 @@
 import React from 'react'
 import type { CampaignContact } from '../hooks/useCampaigns'
+import { htmlToText } from '../utils/html'
 
 interface ContactDetailSidebarProps {
   contact: CampaignContact
@@ -72,7 +73,7 @@ const ContactDetailSidebar: React.FC<ContactDetailSidebarProps> = ({ contact, on
         {contact.reply_body && (
           <div className="sidebar-field">
             <label className="sidebar-field-label">Reply</label>
-            <div className="reply-body-box">{contact.reply_body}</div>
+            <div className="reply-body-box" style={{ whiteSpace: 'pre-wrap' }}>{htmlToText(contact.reply_body)}</div>
           </div>
         )}
 

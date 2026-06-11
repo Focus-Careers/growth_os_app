@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import type { Campaign, CampaignContact, CampaignItp, CampaignSender } from '../hooks/useCampaigns'
+import { htmlToText } from '../utils/html'
 
 const API_URL = import.meta.env.VITE_API_URL
 const PRESET_SMTP_HOSTS = new Set(['smtp.gmail.com', 'smtp.office365.com', 'smtp.mail.yahoo.com'])
@@ -502,9 +503,10 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
                     {cc.contact?.role && (
                       <div className="kanban-card-role">{cc.contact.role}</div>
                     )}
-                    {cc.reply_body && (
-                      <div className="kanban-card-reply">{cc.reply_body.slice(0, 60)}{cc.reply_body.length > 60 ? '...' : ''}</div>
-                    )}
+                    {cc.reply_body && (() => {
+                      const replyText = htmlToText(cc.reply_body)
+                      return <div className="kanban-card-reply">{replyText.slice(0, 60)}{replyText.length > 60 ? '...' : ''}</div>
+                    })()}
                     {cc.sent_at && col.key !== 'pending' && !cc.reply_body && (
                       <div className="kanban-card-time">{formatTimestamp(col.key === 'replied' && cc.replied_at ? cc.replied_at : col.key === 'opened' && cc.opened_at ? cc.opened_at : cc.sent_at)}</div>
                     )}
