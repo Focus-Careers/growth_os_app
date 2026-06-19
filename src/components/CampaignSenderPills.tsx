@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import supabase from '../services/supabase'
+import ProvisioningWizard from './ProvisioningWizard'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -25,6 +26,7 @@ export default function CampaignSenderPills({ campaignId, accountId, onChange }:
   const [totalCapacity, setTotalCapacity] = useState(0)
   const [allSenders, setAllSenders] = useState<{ id: string; email: string; verified: boolean }[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
 
   const refresh = useCallback(async () => {
     const res = await fetch(`${API_URL}/api/campaigns/${campaignId}/senders`)
@@ -103,11 +105,26 @@ export default function CampaignSenderPills({ campaignId, accountId, onChange }:
             ))}
           </select>
         )}
+
+        <button className="sender-pill__add sender-pill__add--accent" onClick={() => setWizardOpen(true)}>
+          + Provision new mailboxes
+        </button>
       </div>
       <div className="sender-capacity-summary">
         Combined capacity: <strong>{totalCapacity}/day</strong>
         {senders.length > 1 && ` across ${senders.length} senders`}
       </div>
+
+      {wizardOpen && (
+        <div className="provisioning-modal-backdrop" onClick={() => setWizardOpen(false)}>
+          <div className="provisioning-modal" onClick={(e) => e.stopPropagation()}>
+            <ProvisioningWizard
+              accountId={accountId}
+              onClose={() => { setWizardOpen(false); refresh(); onChange?.() }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

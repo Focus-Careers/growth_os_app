@@ -3453,3 +3453,23 @@ body {
   font-size: 11px; color: var(--muted);
   font-family: 'DM Mono', monospace; margin-top: 4px;
 }
+
+/* Provisioning modal */
+.provisioning-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(26, 26, 24, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+  animation: provisioning-modal-fade 0.15s ease-out;
+}
+.provisioning-modal {
+  max-height: 90vh; overflow-y: auto; width: 100%; max-width: 760px;
+}
+.provisioning-modal .provisioning-wizard { margin: 0; }
+@keyframes provisioning-modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.sender-pill__add--accent {
+  border-style: solid; border-color: var(--accent); color: var(--accent);
+}
+.sender-pill__add--accent:hover { background: #fff3ee; }
