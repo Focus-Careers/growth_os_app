@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import supabase from '../services/supabase'
+import { authFetch } from '../services/api'
 
 interface Sender {
   id: string
@@ -115,13 +116,14 @@ const SelectSenderSidebar: React.FC<SelectSenderSidebarProps> = ({
   const [imapHost, setImapHost] = useState('')
   const [imapPort, setImapPort] = useState('993')
   const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!accountId) return
     ;(async () => {
       const { data } = await supabase
         .from('senders')
-        .select('*')
+        .select('id, email, display_name, smtp_host, verified')
         .eq('account_id', accountId)
       setSenders(data ?? [])
       setLoading(false)
@@ -143,6 +145,7 @@ const SelectSenderSidebar: React.FC<SelectSenderSidebarProps> = ({
       setImapPort('993')
     }
     setSmtpPassword('')
+    setCreateError(null)
     setNewEmail('')
     setNewDisplayName('')
   }
@@ -150,25 +153,30 @@ const SelectSenderSidebar: React.FC<SelectSenderSidebarProps> = ({
   async function handleCreateSender() {
     if (!newEmail.trim() || !smtpHost.trim() || !smtpPassword.trim() || !accountId) return
     setCreating(true)
-    const { data } = await supabase
-      .from('senders')
-      .insert({
-        account_id: accountId,
-        email: newEmail.trim().toLowerCase(),
-        display_name: newDisplayName.trim() || null,
-        smtp_host: smtpHost.trim(),
-        smtp_port: parseInt(smtpPort) || 587,
-        smtp_username: newEmail.trim().toLowerCase(),
-        smtp_password: smtpPassword.trim(),
-        imap_host: imapHost.trim() || null,
-        imap_port: parseInt(imapPort) || 993,
-        provider: 'smartlead',
-        verified: false,
+    setCreateError(null)
+    try {
+      const res = await authFetch('/api/senders', {
+        method: 'POST',
+        body: JSON.stringify({
+          account_id: accountId,
+          email: newEmail,
+          display_name: newDisplayName,
+          smtp_host: smtpHost,
+          smtp_port: smtpPort,
+          smtp_password: smtpPassword,
+          imap_host: imapHost,
+          imap_port: imapPort,
+        }),
       })
-      .select('id')
-      .single()
-    setCreating(false)
-    if (data) { setSelecting(true); onSelect(data.id) }
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.sender) { setCreateError(data.error ?? 'Could not connect sender'); return }
+      setSelecting(true)
+      onSelect(data.sender.id)
+    } catch {
+      setCreateError('Could not connect sender')
+    } finally {
+      setCreating(false)
+    }
   }
 
   if (loading) {
@@ -316,6 +324,8 @@ const SelectSenderSidebar: React.FC<SelectSenderSidebarProps> = ({
                 />
               </>
             )}
+
+            {createError && <div className="sender-error-text">{createError}</div>}
 
             <button
               className="sender-create-btn"

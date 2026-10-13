@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import type { Campaign, CampaignContact, CampaignItp, CampaignSender } from '../hooks/useCampaigns'
 import { htmlToText } from '../utils/html'
+import { authFetch } from '../services/api'
 
-const API_URL = import.meta.env.VITE_API_URL
 const PRESET_SMTP_HOSTS = new Set(['smtp.gmail.com', 'smtp.office365.com', 'smtp.mail.yahoo.com'])
 
 function BodyEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
@@ -96,6 +96,7 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
   const [senderCredsSmtpHost, setSenderCredsSmtpHost] = useState('')
   const [senderCredsSmtpPort, setSenderCredsSmtpPort] = useState('')
   const [savingCreds, setSavingCreds] = useState(false)
+  const [credsError, setCredsError] = useState<string | null>(null)
 
   // Parse email sequence once when campaign changes — reset tab index
   useEffect(() => {
@@ -365,9 +366,11 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
                       <input className="sender-create-input" type="text" value={senderCredsSmtpPort} onChange={e => setSenderCredsSmtpPort(e.target.value)} placeholder="587" />
                     </>
                   )}
+                  {credsError && <div className="sender-error-text">{credsError}</div>}
                   <div className="campaign-sender-actions">
                     <button className="campaign-sender-save" disabled={!senderCredsPassword.trim() || savingCreds} onClick={async () => {
                       setSavingCreds(true)
+                      setCredsError(null)
                       try {
                         const body: Record<string, string> = {
                           email: senderCredsEmail,
@@ -378,11 +381,15 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
                           body.smtp_host = senderCredsSmtpHost
                           body.smtp_port = senderCredsSmtpPort
                         }
-                        await fetch(`${API_URL}/api/senders/${currentSender.id}/credentials`, {
+                        const res = await authFetch(`/api/senders/${currentSender.id}/credentials`, {
                           method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify(body),
                         })
+                        if (!res.ok) {
+                          const data = await res.json().catch(() => ({}))
+                          setCredsError(data.error ?? 'Could not save credentials')
+                          return
+                        }
                         setEditingSenderCreds(false)
                         onRefresh?.()
                       } finally {
@@ -416,6 +423,7 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({
                       setSenderCredsPassword('')
                       setSenderCredsSmtpHost(currentSender.smtp_host ?? '')
                       setSenderCredsSmtpPort('587')
+                      setCredsError(null)
                       setEditingSenderCreds(true)
                     }}>Edit credentials</button>
                   </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import type { Account, Sender, ActivityMessage } from '../types/index'
+import type { Account, Sender, SenderUpdate, ActivityMessage } from '../types/index'
 import type { PepperUserDetails } from '../hooks/usePepper'
 
 const API_URL = import.meta.env.VITE_API_URL
@@ -18,7 +18,7 @@ interface PepperAdminProps {
   activityLog: ActivityMessage[]
   senders: Sender[]
   onUpdateUserFirstname: (firstname: string) => Promise<any>
-  onUpdateSender: (senderId: string, updates: Partial<Sender>) => Promise<any>
+  onUpdateSender: (senderId: string, updates: SenderUpdate) => Promise<Error | null>
   onAddSender: () => void
   onDeleteCompany: () => Promise<void>
   canDeleteCompany: boolean
@@ -49,8 +49,9 @@ const PepperAdmin: React.FC<PepperAdminProps> = ({ account, userDetails, activit
   const [savingName, setSavingName] = useState(false)
 
   const [editingSenderId, setEditingSenderId] = useState<string | null>(null)
-  const [senderDraft, setSenderDraft] = useState<Partial<Sender>>({})
+  const [senderDraft, setSenderDraft] = useState<SenderUpdate>({})
   const [savingSender, setSavingSender] = useState(false)
+  const [senderError, setSenderError] = useState<string | null>(null)
 
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -161,16 +162,18 @@ const PepperAdmin: React.FC<PepperAdminProps> = ({ account, userDetails, activit
       imap_host: sender.imap_host ?? '',
       imap_port: sender.imap_port ?? 993,
     })
+    setSenderError(null)
     setEditingSenderId(sender.id)
   }
 
   async function saveSender() {
     if (!editingSenderId) return
     setSavingSender(true)
-    const updates: Partial<Sender> = { ...senderDraft }
+    const updates: SenderUpdate = { ...senderDraft }
     if (!updates.smtp_password) delete updates.smtp_password
-    await onUpdateSender(editingSenderId, updates)
+    const error = await onUpdateSender(editingSenderId, updates)
     setSavingSender(false)
+    if (error) { setSenderError(error.message); return }
     setEditingSenderId(null)
   }
 
@@ -338,6 +341,7 @@ const PepperAdmin: React.FC<PepperAdminProps> = ({ account, userDetails, activit
                           <input className="pepper-input" type="number" value={senderDraft.imap_port ?? 993} onChange={e => setSenderDraft(d => ({ ...d, imap_port: parseInt(e.target.value) || 993 }))} />
                         </div>
                       </div>
+                      {senderError && <div className="sender-error-text">{senderError}</div>}
                       <div className="pepper-edit-actions">
                         <button className="pepper-save-btn" onClick={saveSender} disabled={savingSender}>{savingSender ? 'Saving...' : 'Save'}</button>
                         <button className="pepper-cancel-btn" onClick={() => setEditingSenderId(null)} disabled={savingSender}>Cancel</button>
