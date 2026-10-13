@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import supabase from '../services/supabase'
-import type { Employee, Account, Sender, ActivityMessage } from '../types/index'
+import { authFetch } from '../services/api'
+import { SENDER_COLUMNS } from '../types/index'
+import type { Employee, Account, Sender, SenderUpdate, ActivityMessage } from '../types/index'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -29,7 +31,7 @@ export default function usePepper({ accountId, userDetailsId, selectedEmployee, 
 
   const fetchSenders = useCallback(async () => {
     if (!accountId) return
-    const { data } = await supabase.from('senders').select('*').eq('account_id', accountId)
+    const { data } = await supabase.from('senders').select(SENDER_COLUMNS).eq('account_id', accountId)
     setSenders((data ?? []) as Sender[])
   }, [accountId])
 
@@ -80,12 +82,15 @@ export default function usePepper({ accountId, userDetailsId, selectedEmployee, 
     return error
   }, [userDetailsId])
 
-  const updateSender = useCallback(async (senderId: string, updates: Partial<Sender>) => {
-    const { error } = await supabase.from('senders').update(updates).eq('id', senderId)
-    if (!error) {
-      setSenders(prev => prev.map(s => s.id === senderId ? { ...s, ...updates } : s))
-    }
-    return error
+  const updateSender = useCallback(async (senderId: string, updates: SenderUpdate) => {
+    const res = await authFetch(`/api/senders/${senderId}/credentials`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) return new Error(data.error ?? 'Failed to update sender')
+    setSenders(prev => prev.map(s => s.id === senderId ? { ...s, ...data.sender } : s))
+    return null
   }, [])
 
   return { account, userDetails, activityLog, senders, pepperSummary, updateUserFirstname, updateSender, refreshSenders: fetchSenders }

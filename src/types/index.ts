@@ -108,6 +108,7 @@ export interface Customer {
   organisation_website: string | null
 }
 
+// smtp_password is deliberately absent: the browser can't read it (column-level grant).
 export interface Sender {
   id: string
   account_id: string
@@ -116,12 +117,16 @@ export interface Sender {
   smtp_host: string | null
   smtp_port: number | null
   smtp_username: string | null
-  smtp_password: string | null
   imap_host: string | null
   imap_port: number | null
   provider: string | null
   verified: boolean
 }
+
+export const SENDER_COLUMNS = 'id, account_id, email, display_name, smtp_host, smtp_port, smtp_username, imap_host, imap_port, provider, verified'
+
+// Fields editable via PUT /api/senders/:id/credentials. A blank smtp_password keeps the stored one.
+export type SenderUpdate = Partial<Omit<Sender, 'id' | 'account_id' | 'provider' | 'verified'>> & { smtp_password?: string }
 
 export interface ItpStats {
   itpId: string
